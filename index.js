@@ -38,7 +38,7 @@ function RapidConnect() {
         conn.createChannel(function (err, ch) {
             var ex = 'Rapid';
             ch.assertExchange(ex, 'direct', { durable: false });
-            ch.publish(ex, 'PDF', new Buffer(msg));
+            ch.publish(ex, 'pdf_maker', new Buffer(msg));
         });
         setTimeout(function () {
             conn.close();
