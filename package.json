@@ -1,0 +1,30 @@
+{
+  "name": "PrivateBudgetManagerWebSocket",
+  "version": "1.0.0",
+  "description": "3. Semester's Programmerings Projekt med Team Smoker: Claus, Jonas, Mikael &amp; Thomas",
+  "main": "index.js",
+  "dependencies": {
+    "amqplib": "^0.5.2",
+    "express": "^4.16.2",
+    "ws": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.5.4",
+    "@types/express": "^4.0.39",
+    "@types/ws": "^3.2.0"
+  },
+  "scripts": {
+    "start": "node ./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jona711p/PrivateBudgetManagerWebSocket.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jona711p/PrivateBudgetManagerWebSocket/issues"
+  },
+  "homepage": "https://github.com/jona711p/PrivateBudgetManagerWebSocket#readme"
+}
