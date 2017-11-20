@@ -6,6 +6,10 @@ import { URL } from 'url';
 import * as amqp from 'amqplib/callback_api';
 
 
+// RabbitMQ URL
+let rabbitMQURL: string = "" + process.env.RabbitMQURL;
+
+
 // Message
 let msg = "";
 
@@ -22,7 +26,6 @@ let url = URL;
 
 // Init WebSocket Server
 const wss = new WebSocket.Server({ server });
-
 wss.on('connection', (ws: WebSocket) => {
 
     // Connection is up, let's add a simple simple event
@@ -44,7 +47,7 @@ function printMess() {
 };
 
 function RapidConnect() {
-    amqp.connect('amqp://1doFhxuC:WGgk9kXy_wFIFEO0gwB_JiDuZm2-PrlO@black-ragwort-810.bigwig.lshift.net:10802/SDU53lDhKShK', function (err, conn) {
+    amqp.connect(rabbitMQURL, function (err, conn) {
         conn.createChannel(function (err, ch) {
             let ex = 'Rapid';
             ch.assertExchange(ex, 'direct', { durable: false });
@@ -66,7 +69,7 @@ wss.on('connection', (ws) => {
 });
 
 
-// Start our server
-server.listen(process.env.PORT || 3000, () => {
-    console.log(`Server started on port ${server.address().port} :)`);
-});
+// Init & Start Server
+let port = (process.env.PORT || 3000);
+app.listen(port);
+console.log(`Private Budget Manager WebSocket Server Listening on Port: ${port}`);
