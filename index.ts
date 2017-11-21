@@ -1,75 +1,84 @@
 // Imports
-import * as express from 'express';
-import * as http from 'http';
-import * as WebSocket from 'ws';
-import { URL } from 'url';
 import * as amqp from 'amqplib/callback_api';
+import * as express from 'express';
+import * as expressWs from 'express-ws'; // Dossent have a '@types version' for 'devDependencies', so ignore the evil red lines ;)
+import * as http from 'http';
 
 
-// RabbitMQ URL
-let rabbitMQURL: string = "" + process.env.RabbitMQURL;
+// RabbitMQ
+const ex = 'Rapid';
+const RABBIT_SEND = 'amqp://1doFhxuC:WGgk9kXy_wFIFEO0gwB_JiDuZm2-PrlO@black-ragwort-810.bigwig.lshift.net:10802/SDU53lDhKShK';
+const RABBIT_RECEIVE = 'amqp://1doFhxuC:WGgk9kXy_wFIFEO0gwB_JiDuZm2-PrlO@black-ragwort-810.bigwig.lshift.net:10803/SDU53lDhKShK';
 
 
-// Message
-let msg = "";
-
-
-// Init Express
-
+// Init Express & HTTP Server
 const app = express();
-
-
-// Init HTTP Server
 const server = http.createServer(app);
-let url = URL;
+const eWs = expressWs(app, server);
 
 
-// Init WebSocket Server
-const wss = new WebSocket.Server({ server });
-wss.on('connection', (ws: WebSocket) => {
+// WebSocket Server & Routing
 
-    // Connection is up, let's add a simple simple event
-    ws.on('message', (message: string) => {
+// 'app.ws' uses 'express-ws', so ignore the evil red lines ;)
+app.ws('/generatePDF', function (ws, req) {
 
-        // Log the received message and send it back to the client
-        msg = message;
-        //console.log('received: %s', message);
-        RapidConnect();
-        printMess();
+    ws.on('message', msg => {
+
+        sendToRapid('generatePDF', JSON.stringify(msg));
+    });
+});
+
+
+// 'app.ws' uses 'express-ws', so ignore the evil red lines ;)
+app.ws('/generateLOG', function (ws, req) {
+    
+        ws.on('message', msg => {
+    
+            sendToRapid('generateLOG', JSON.stringify(msg));
+        });
     });
 
-    // Send immediatly a feedback to the incoming connection   
-    ws.send('Hi there, I am a WebSocket server, hosted by Team Smoker');
-});
 
-function printMess() {
-    console.log("Client has send: " + msg + "This message is a single console.log");
-};
+// RabbitMQ
+function sendToRapid(routing: string, msg: any, mode: string = 'direct', durable: boolean = false) {
+    amqp.connect(RABBIT_SEND, (err, conn) => {
 
-function RapidConnect() {
-    amqp.connect(rabbitMQURL, function (err, conn) {
-        conn.createChannel(function (err, ch) {
-            let ex = 'Rapid';
-            ch.assertExchange(ex, 'direct', { durable: false });
-            ch.publish(ex, 'pdf_maker', new Buffer(msg));
+        conn.createChannel((err, ch) => {
+            ch.assertExchange(ex, mode, { durable });
+
+            ch.publish(ex, routing, new Buffer(msg));
+            console.log('Routing: ' + routing + '\nMessage Send: ' + msg);
+
+            setTimeout(function () {
+                conn.close();
+            }, 500);
         });
-
-        setTimeout(function () {
-            conn.close();
-            process.exit(0);
-        }, 500);
-    })
-};
+    });
+}
 
 
-// Listens to connections
-wss.on('connection', (ws) => {
-    console.log('Client connected');
-    ws.on('close', () => console.log('Client disconnected'));
-});
+function recieveFromRapid(severity: string[], mode: string = 'direct', durable: boolean = false, noAck: boolean = true) {
+    amqp.connect(RABBIT_RECEIVE, function (err: any, conn: any) {
+        conn.createChannel(function (err: any, ch: any) {
+
+            ch.assertExchange(ex, mode, { durable });
+
+            ch.assertQueue('', { exclusive: true }, function (err: any, q: any) {
+
+                severity.forEach(function (severityArg) {
+                    ch.bindQueue(q.queue, ex, severityArg);
+                });
+                ch.consume(q.queue, function (msg: any) {
+                    console.log('Message Recieved: ' + msg.content.toString());
+                    conn.close();
+                }, { noAck });
+            });
+        });
+    });
+}
 
 
 // Init & Start Server
 let port = (process.env.PORT || 3000);
-app.listen(port);
+server.listen(port);
 console.log(`Private Budget Manager WebSocket Server Listening on Port: ${port}`);
