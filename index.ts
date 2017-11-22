@@ -9,6 +9,7 @@ import * as http from 'http';
 const ex = 'Rapid';
 const RABBIT_SEND = 'amqp://1doFhxuC:WGgk9kXy_wFIFEO0gwB_JiDuZm2-PrlO@black-ragwort-810.bigwig.lshift.net:10802/SDU53lDhKShK';
 const RABBIT_RECEIVE = 'amqp://1doFhxuC:WGgk9kXy_wFIFEO0gwB_JiDuZm2-PrlO@black-ragwort-810.bigwig.lshift.net:10803/SDU53lDhKShK';
+let generatedPDFUrl: string = '';
 
 
 // Init Express & HTTP Server
@@ -18,25 +19,31 @@ const eWs = expressWs(app, server);
 
 
 // WebSocket Server & Routing
-
 // 'app.ws' uses 'express-ws', so ignore the evil red lines ;)
 app.ws('/generatePDF', function (ws, req) {
 
     ws.on('message', msg => {
 
         sendToRapid('generatePDF', JSON.stringify(msg));
+
+        recieveFromRapid(['generatedPDFUrl']);
+        
+        setTimeout(function () {
+            
+            ws.send(generatedPDFUrl);
+        }, 2000);
     });
 });
 
 
 // 'app.ws' uses 'express-ws', so ignore the evil red lines ;)
 app.ws('/generateLOG', function (ws, req) {
-    
-        ws.on('message', msg => {
-    
-            sendToRapid('generateLOG', JSON.stringify(msg));
-        });
+
+    ws.on('message', msg => {
+
+        sendToRapid('generateLOG', JSON.stringify(msg));
     });
+});
 
 
 // RabbitMQ
@@ -71,6 +78,8 @@ function recieveFromRapid(severity: string[], mode: string = 'direct', durable: 
                 ch.consume(q.queue, function (msg: any) {
                     console.log('Message Recieved: ' + msg.content.toString());
                     conn.close();
+
+                    generatedPDFUrl = msg.content.toString();
                 }, { noAck });
             });
         });

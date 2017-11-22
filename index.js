@@ -9,6 +9,7 @@ var http = require("http");
 var ex = 'Rapid';
 var RABBIT_SEND = 'amqp://1doFhxuC:WGgk9kXy_wFIFEO0gwB_JiDuZm2-PrlO@black-ragwort-810.bigwig.lshift.net:10802/SDU53lDhKShK';
 var RABBIT_RECEIVE = 'amqp://1doFhxuC:WGgk9kXy_wFIFEO0gwB_JiDuZm2-PrlO@black-ragwort-810.bigwig.lshift.net:10803/SDU53lDhKShK';
+var generatedPDFUrl = '';
 // Init Express & HTTP Server
 var app = express();
 var server = http.createServer(app);
@@ -18,6 +19,10 @@ var eWs = expressWs(app, server);
 app.ws('/generatePDF', function (ws, req) {
     ws.on('message', function (msg) {
         sendToRapid('generatePDF', JSON.stringify(msg));
+        recieveFromRapid(['generatedPDFUrl']);
+        setTimeout(function () {
+            ws.send(generatedPDFUrl);
+        }, 2000);
     });
 });
 // 'app.ws' uses 'express-ws', so ignore the evil red lines ;)
@@ -55,6 +60,7 @@ function recieveFromRapid(severity, mode, durable, noAck) {
                 ch.consume(q.queue, function (msg) {
                     console.log('Message Recieved: ' + msg.content.toString());
                     conn.close();
+                    generatedPDFUrl = msg.content.toString();
                 }, { noAck: noAck });
             });
         });
