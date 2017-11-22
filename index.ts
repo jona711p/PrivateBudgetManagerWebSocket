@@ -63,6 +63,7 @@ function sendToRapid(routing: string, msg: any, mode: string = 'direct', durable
     });
 }
 
+
 // RabbitMQ Recieve
 function recieveFromRapid(severity: string[], mode: string = 'direct', durable: boolean = false, noAck: boolean = true) {
     amqp.connect(RABBIT_RECEIVE, function (err: any, conn: any) {
