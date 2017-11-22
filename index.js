@@ -31,7 +31,7 @@ app.ws('/generateLOG', function (ws, req) {
         sendToRapid('generateLOG', JSON.stringify(msg));
     });
 });
-// RabbitMQ
+// RabbitMQ Send
 function sendToRapid(routing, msg, mode, durable) {
     if (mode === void 0) { mode = 'direct'; }
     if (durable === void 0) { durable = false; }
@@ -46,6 +46,7 @@ function sendToRapid(routing, msg, mode, durable) {
         });
     });
 }
+// RabbitMQ Recieve
 function recieveFromRapid(severity, mode, durable, noAck) {
     if (mode === void 0) { mode = 'direct'; }
     if (durable === void 0) { durable = false; }
